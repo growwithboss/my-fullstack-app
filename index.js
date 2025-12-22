@@ -6,7 +6,7 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    res.send("Office AI Backend is running!");
+    res.send("Office AI Backend is live and healthy!");
 });
 
 app.post("/api/refine", async (req, res) => {
@@ -26,9 +26,10 @@ app.post("/api/refine", async (req, res) => {
         const refined = data.candidates[0].content.parts[0].text;
         res.json({ refinedText: refined });
     } catch (error) {
-        res.status(500).json({ error: "AI Processing Failed" });
+        console.error("Error:", error);
+        res.status(500).json({ error: "AI logic failed" });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server live on port ${PORT}`));
+app.listen(PORT, () => console.log("Server started on port " + PORT));
