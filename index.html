@@ -1,23 +1,105 @@
-<div class="game-card">
-    <h2>✨ Office AI Refiner</h2>
-    <textarea id="aiInput" style="width:90%; height:100px;" placeholder="Paste messy notes here..."></textarea>
-    <br><br>
-    <button onclick="refineText()">Professionalize</button>
-    <div id="aiOutput" style="margin-top:20px; text-align:left; font-style:italic; color:#555;"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Office AI Suite</title>
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        nav { background: white; padding: 1rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        
+        /* Dashboard Grid */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; }
+        .card:hover { transform: translateY(-5px); border: 2px solid var(--primary); }
+        .card h3 { margin-top: 0; color: var(--primary); }
+        
+        /* Tool View (Hidden by default) */
+        .tool-view { display: none; background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .back-btn { margin-bottom: 1rem; cursor: pointer; color: var(--primary); font-weight: bold; }
+        textarea { width: 100%; height: 150px; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; margin: 1rem 0; font-size: 1rem; }
+        button { background: var(--primary); color: white; border: none; padding: 0.8rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+        #result { background: #f1f5f9; padding: 1rem; border-radius: 8px; margin-top: 1rem; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h2 onclick="showHome()" style="cursor:pointer">🏢 OfficeAI</h2>
+    <div>Status: <span style="color:green">● Live</span></div>
+</nav>
+
+<div class="container">
+    <div id="home-view">
+        <h1>Welcome back!</h1>
+        <p>Select an AI tool to begin your work.</p>
+        <div class="grid">
+            <div class="card" onclick="showTool('refiner')">
+                <h3>✨ Email Refiner</h3>
+                <p>Turn messy notes into professional, polite business emails.</p>
+            </div>
+            <div class="card" style="opacity: 0.6; cursor: not-allowed;">
+                <h3>📊 Excel Analyzer</h3>
+                <p>Upload a sheet and ask questions (Coming Soon).</p>
+            </div>
+            <div class="card" style="opacity: 0.6; cursor: not-allowed;">
+                <h3>📝 Meeting Summarizer</h3>
+                <p>Paste transcripts to get action points (Coming Soon).</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="refiner-view" class="tool-view">
+        <div class="back-btn" onclick="showHome()">← Back to Dashboard</div>
+        <h1>Email Refiner</h1>
+        <p>Paste your draft or messy points below:</p>
+        <textarea id="aiInput" placeholder="Ex: Tell Rahul I can't come to meeting, too much work, maybe Friday?"></textarea>
+        <button id="refineBtn" onclick="runRefiner()">Professionalize</button>
+        <div id="result">The refined text will appear here...</div>
+    </div>
 </div>
 
 <script>
-    async function refineText() {
-        const input = document.getElementById('aiInput').value;
-        const output = document.getElementById('aiOutput');
-        output.innerText = "Processing...";
+    const API_URL = 'https://my-fullstack-app-gvce.onrender.com/api/refine';
 
-        const res = await fetch('https://my-fullstack-app-gvce.onrender.com/api/refine', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: input })
-        });
-        const data = await res.json();
-        output.innerText = data.refinedText;
+    function showTool(toolId) {
+        document.getElementById('home-view').style.display = 'none';
+        document.getElementById(toolId + '-view').style.display = 'block';
+    }
+
+    function showHome() {
+        document.getElementById('home-view').style.display = 'block';
+        const views = document.getElementsByClassName('tool-view');
+        for(let v of views) v.style.display = 'none';
+    }
+
+    async function runRefiner() {
+        const input = document.getElementById('aiInput').value;
+        const btn = document.getElementById('refineBtn');
+        const resDiv = document.getElementById('result');
+
+        if(!input) return alert("Please enter some text!");
+
+        btn.innerText = "Processing...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: input })
+            });
+            const data = await res.json();
+            resDiv.innerText = data.refinedText;
+        } catch (err) {
+            resDiv.innerText = "Error: Could not connect to the AI backend.";
+        } finally {
+            btn.innerText = "Professionalize";
+            btn.disabled = false;
+        }
     }
 </script>
+</body>
+</html>
