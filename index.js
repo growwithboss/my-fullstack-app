@@ -5,31 +5,29 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 1. Test Route (Open this in your browser to see if it works)
 app.get("/", (req, res) => {
-    res.send("Office AI Backend is live and healthy!");
+    res.send("Server is ALIVE!");
 });
 
+// 2. The AI Route
 app.post("/api/refine", async (req, res) => {
     try {
         const { text } = req.body;
-        const API_KEY = process.env.AIzaSyA3C50hjiASoWnhi0G-8Q1iozqq5Cr4Mco;
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: "Professionalize this for an office: " + text }] }]
+                contents: [{ parts: [{ text: "Professionalize: " + text }] }]
             })
         });
-
         const data = await response.json();
-        const refined = data.candidates[0].content.parts[0].text;
-        res.json({ refinedText: refined });
-    } catch (error) {
-        console.error("Error:", error);
-        res.status(500).json({ error: "AI logic failed" });
+        const result = data.candidates[0].content.parts[0].text;
+        res.json({ refinedText: result });
+    } catch (err) {
+        res.status(500).json({ error: "Backend error" });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server started on port " + PORT));
+app.listen(PORT, () => console.log("Running on " + PORT));
