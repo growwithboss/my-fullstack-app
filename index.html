@@ -1,26 +1,52 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>My Fullstack Project</title>
+    <title>My Fullstack App</title>
     <style>
-        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
-        #display { font-size: 24px; color: blue; font-weight: bold; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        #message-list { list-style: none; padding: 0; }
+        li { background: #f4f4f4; margin: 5px; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
-    <h1>Frontend Connected</h1>
-    <div id="display">Waiting for backend...</div>
+    <h1>Cloud Messenger</h1>
+    
+    <input type="text" id="userInput" placeholder="Type something...">
+    <button onclick="sendMessage()">Send to Cloud</button>
+
+    <h3>Messages from Server:</h3>
+    <ul id="message-list"></ul>
 
     <script>
-        fetch('https://my-fullstack-app-gvce.onrender.com')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('display').innerText = data.message;
-            })
-            .catch(err => {
-                document.getElementById('display').innerText = "Error: Backend not found!";
-                console.error(err);
+        const API_URL = 'https://my-fullstack-app-gvce.onrender.com/api/messages';
+
+        // 1. Function to Load Data
+        async function loadMessages() {
+            const response = await fetch(API_URL);
+            const messages = await response.json();
+            const list = document.getElementById('message-list');
+            list.innerHTML = ''; // Clear old list
+            messages.forEach(msg => {
+                const li = document.createElement('li');
+                li.innerText = msg;
+                list.appendChild(li);
             });
+        }
+
+        // 2. Function to Send Data
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: input.value })
+            });
+            input.value = ''; // Clear input
+            loadMessages();   // Refresh the list
+        }
+
+        // Load messages when page opens
+        loadMessages();
     </script>
 </body>
 </html>
