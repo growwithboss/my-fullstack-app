@@ -1,96 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Office Break Games</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #f4f4f4; padding: 20px; }
-        .game-card { background: white; padding: 20px; margin: 20px auto; max-width: 400px; border-radius: 10px; shadow: 0 4px; }
-        button { padding: 10px 20px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; }
-        .hidden { display: none; }
-    </style>
-</head>
-<body>
+<div class="game-card">
+    <h2>✨ Office AI Refiner</h2>
+    <textarea id="aiInput" style="width:90%; height:100px;" placeholder="Paste messy notes here..."></textarea>
+    <br><br>
+    <button onclick="refineText()">Professionalize</button>
+    <div id="aiOutput" style="margin-top:20px; text-align:left; font-style:italic; color:#555;"></div>
+</div>
 
-    <h1>🎮 Office Break Games</h1>
+<script>
+    async function refineText() {
+        const input = document.getElementById('aiInput').value;
+        const output = document.getElementById('aiOutput');
+        output.innerText = "Processing...";
 
-    <div class="game-card">
-        <h2>Click Racer</h2>
-        <p>Clicks: <span id="clickCount">0</span> | Time: <span id="timeLeft">10</span>s</p>
-        <button id="clickBtn" onclick="handleBtnClick()">Start Game</button>
-        <p id="highScore">Top Office Score: Loading...</p>
-    </div>
-
-    <div class="game-card">
-        <h2>Guess the Number (1-100)</h2>
-        <input type="number" id="guessInput" placeholder="Enter number">
-        <button onclick="checkGuess()">Guess</button>
-        <p id="guessHint">Good luck!</p>
-    </div>
-
-    <script>
-        const API_URL = 'https://my-fullstack-app-gvce.onrender.com/api/scores';
-        
-        // --- CLICK RACER LOGIC ---
-        let clicks = 0;
-        let time = 10;
-        let active = false;
-
-        function handleBtnClick() {
-            if (!active && time === 10) {
-                active = true;
-                startTimer();
-            }
-            if (active) {
-                clicks++;
-                document.getElementById('clickCount').innerText = clicks;
-            }
-        }
-
-        function startTimer() {
-            let timer = setInterval(() => {
-                time--;
-                document.getElementById('timeLeft').innerText = time;
-                if (time === 0) {
-                    clearInterval(timer);
-                    active = false;
-                    alert("Time's up! You got " + clicks + " clicks.");
-                    saveScore(clicks); // Send to your backend!
-                }
-            }, 1000);
-        }
-
-        // --- NUMBER GUESSER LOGIC ---
-        let targetNum = Math.floor(Math.random() * 100) + 1;
-        function checkGuess() {
-            let userGuess = document.getElementById('guessInput').value;
-            let hint = document.getElementById('guessHint');
-            if (userGuess == targetNum) {
-                hint.innerText = "🎉 Correct! Resetting...";
-                targetNum = Math.floor(Math.random() * 100) + 1;
-            } else if (userGuess < targetNum) {
-                hint.innerText = "Higher! ⬆️";
-            } else {
-                hint.innerText = "Lower! ⬇️";
-            }
-        }
-
-        // --- BACKEND CONNECTION ---
-        async function saveScore(s) {
-            await fetch(API_URL, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ score: s })
-            });
-            loadHighScore();
-        }
-
-        async function loadHighScore() {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            document.getElementById('highScore').innerText = "Top Office Score: " + (data.maxScore || 0);
-        }
-
-        loadHighScore();
-    </script>
-</body>
-</html>
+        const res = await fetch('https://my-fullstack-app-gvce.onrender.com/api/refine', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: input })
+        });
+        const data = await res.json();
+        output.innerText = data.refinedText;
+    }
+</script>
