@@ -1,0 +1,26 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>My Fullstack Project</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+        #display { font-size: 24px; color: blue; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Frontend Connected</h1>
+    <div id="display">Waiting for backend...</div>
+
+    <script>
+        fetch('http://localhost:3000/')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('display').innerText = data.message;
+            })
+            .catch(err => {
+                document.getElementById('display').innerText = "Error: Backend not found!";
+                console.error(err);
+            });
+    </script>
+</body>
+</html>
