@@ -5,43 +5,53 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. New Status Check Route
+// 1. Fixed Status Check Route
 app.get("/api/status", async (req, res) => {
     const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-        return res.json({ status: "❌ Error", message: "API Key is missing in Render Environment Variables." });
-    }
+    if (!key) return res.json({ status: "❌ Error", message: "API Key is missing." });
     
     try {
-        // Simple request to see if the key is valid
+        // Changed URL to v1beta gemini-1.5-flash
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash?key=${key}`);
+        const data = await response.json();
+        
         if (response.ok) {
-            res.json({ status: "✅ Connected", message: "Backend is successfully talking to Google AI." });
+            res.json({ status: "✅ Connected", message: "System is ready!" });
         } else {
-            const errData = await response.json();
-            res.json({ status: "⚠️ Key Issue", message: errData.error.message });
+            res.json({ status: "⚠️ Key Issue", message: data.error.message });
         }
     } catch (err) {
-        res.json({ status: "❌ Offline", message: "Could not reach Google servers." });
+        res.json({ status: "❌ Offline", message: "Backend cannot reach Google." });
     }
 });
 
-// 2. Your existing Refine Route
+// 2. Fixed Refine Route
 app.post("/api/refine", async (req, res) => {
     try {
         const { text } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
+
+        // Using the most stable v1beta endpoint
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts: [{ text: "Professionalize: " + text }] }] })
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: "Professionalize this for an office environment: " + text }] }]
+            })
         });
+
         const data = await response.json();
-        res.json({ refinedText: data.candidates[0].content.parts[0].text });
+        
+        if (data.candidates && data.candidates[0].content) {
+            const refined = data.candidates[0].content.parts[0].text;
+            res.json({ refinedText: refined });
+        } else {
+            res.json({ refinedText: "AI blocked the response or returned empty. Error: " + (data.error?.message || "Unknown") });
+        }
     } catch (error) {
-        res.status(500).json({ error: "AI logic failed" });
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Server Live"));
+app.listen(PORT, () => console.log("Server Running"));
