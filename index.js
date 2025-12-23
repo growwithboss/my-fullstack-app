@@ -5,15 +5,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Updated Status Check
+// 1. Updated Status Check - Uses v1beta with the base model name
 app.get("/api/status", async (req, res) => {
     const key = process.env.GEMINI_API_KEY;
     if (!key) return res.json({ status: "❌ Error", message: "Key missing in Render settings." });
     try {
-        // v1beta is more compatible for 1.5-flash models
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest?key=${key}`);
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash?key=${key}`);
         if (response.ok) {
-            res.json({ status: "✅ Connected", message: "AI Bridge is live and ready!" });
+            res.json({ status: "✅ Connected", message: "AI is ready to work!" });
         } else {
             const err = await response.json();
             res.json({ status: "⚠️ Issue", message: err.error.message });
@@ -23,13 +22,13 @@ app.get("/api/status", async (req, res) => {
     }
 });
 
-// 2. Updated Refiner Route (Fixed for 404 Model Not Found)
+// 2. Refiner Route - Fixed 404 by using the specific model ID
 app.post("/api/refine", async (req, res) => {
     try {
         const { text } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -58,4 +57,4 @@ app.post("/api/refine", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("System Online"));
+app.listen(PORT, () => console.log("System Online"));v
