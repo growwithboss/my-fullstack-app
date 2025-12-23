@@ -33,6 +33,28 @@
 
     <div class="main-content">
         <div id="home" class="view active">
+            <div id="connection-status" style="padding: 10px; margin-bottom: 20px; border-radius: 8px; background: #eee; font-size: 0.9rem;">
+    Checking Connection...
+</div>
+
+<script>
+    // Add this to your existing <script>
+    async function checkSystemStatus() {
+        const statusDiv = document.getElementById('connection-status');
+        try {
+            const res = await fetch('https://my-fullstack-app-gvce.onrender.com/api/status');
+            const data = await res.json();
+            statusDiv.innerHTML = `<strong>System Status:</strong> ${data.status} - ${data.message}`;
+            statusDiv.style.background = data.status.includes('✅') ? '#dcfce7' : '#fee2e2';
+        } catch (err) {
+            statusDiv.innerHTML = `<strong>System Status:</strong> ❌ Backend Offline (Render is waking up...)`;
+            statusDiv.style.background = '#fee2e2';
+        }
+    }
+
+    // Call it when the page loads
+    checkSystemStatus();
+</script>
             <h1>System Dashboard</h1>
             <div class="dashboard-grid">
                 <div class="tool-card" onclick="switchView('email-refiner')">
