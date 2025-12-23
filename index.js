@@ -5,40 +5,35 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. System Health Check
+// 1. Updated Status Check
 app.get("/api/status", async (req, res) => {
     const key = process.env.GEMINI_API_KEY;
     if (!key) return res.json({ status: "❌ Error", message: "Key missing in Render settings." });
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash?key=${key}`);
+        // v1beta is more compatible for 1.5-flash models
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest?key=${key}`);
         if (response.ok) {
-            res.json({ status: "✅ Connected", message: "AI Bridge is live!" });
+            res.json({ status: "✅ Connected", message: "AI Bridge is live and ready!" });
         } else {
             const err = await response.json();
             res.json({ status: "⚠️ Issue", message: err.error.message });
         }
     } catch (err) {
-        res.json({ status: "❌ Offline", message: "Cannot reach Google." });
+        res.json({ status: "❌ Offline", message: "Cannot reach Google servers." });
     }
 });
 
-// 2. The Refiner Route (Fixed for UNKNOWN errors)
+// 2. Updated Refiner Route (Fixed for 404 Model Not Found)
 app.post("/api/refine", async (req, res) => {
     try {
         const { text } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: "Professionalize this for an office environment: " + text }] }],
-                generationConfig: {
-                    temperature: 0.9,
-                    topP: 1,
-                    topK: 1,
-                    maxOutputTokens: 2048, // Higher limit fixes unexpected empty responses
-                },
+                contents: [{ parts: [{ text: "Rewrite this message to be professional for an office environment: " + text }] }],
                 safetySettings: [
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -55,7 +50,7 @@ app.post("/api/refine", async (req, res) => {
             res.json({ refinedText: refined });
         } else {
             const reason = data.candidates?.[0]?.finishReason || "UNKNOWN_ERROR";
-            res.json({ refinedText: `AI returned no text. Reason: ${reason}. Try a longer prompt.` });
+            res.json({ refinedText: `No text returned. Reason: ${reason}. Check prompt safety.` });
         }
     } catch (error) {
         res.status(500).json({ error: "Server Internal Error" });
