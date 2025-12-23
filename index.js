@@ -8,11 +8,11 @@ app.use(express.json());
 // 1. Fixed Status Check Route
 app.get("/api/status", async (req, res) => {
     const key = process.env.GEMINI_API_KEY;
-    if (!key) return res.json({ status: "❌ Error", message: "API Key is missing." });
+    if (!key) return res.json({ status: "❌ Error", message: "API Key is missing in Render Settings." });
     
     try {
-        // Changed URL to v1beta gemini-1.5-flash
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash?key=${key}`);
+        // Using stable v1 endpoint to check model availability
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash?key=${key}`);
         const data = await response.json();
         
         if (response.ok) {
@@ -31,8 +31,8 @@ app.post("/api/refine", async (req, res) => {
         const { text } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        // Using the most stable v1beta endpoint
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+        // Updated to v1 stable endpoint
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -46,7 +46,7 @@ app.post("/api/refine", async (req, res) => {
             const refined = data.candidates[0].content.parts[0].text;
             res.json({ refinedText: refined });
         } else {
-            res.json({ refinedText: "AI blocked the response or returned empty. Error: " + (data.error?.message || "Unknown") });
+            res.json({ refinedText: "AI returned an empty response. Error: " + (data.error?.message || "Safety Block") });
         }
     } catch (error) {
         res.status(500).json({ error: "Internal Server Error" });
