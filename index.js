@@ -1,4 +1,28 @@
-// Replace your entire app.post("/api/refine", ...) section with this:
+const express = require("express");
+const cors = require("cors");
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+// 1. Health Check & Diagnostic Route
+app.get("/api/status", async (req, res) => {
+    const key = process.env.GEMINI_API_KEY;
+    if (!key) return res.json({ status: "❌ Error", message: "Key missing in Render Environment." });
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+        if (response.ok) {
+            res.json({ status: "✅ Connected", message: "AI Bridge is active!" });
+        } else {
+            const err = await response.json();
+            res.json({ status: "⚠️ Key Issue", message: err.error.message });
+        }
+    } catch (err) {
+        res.json({ status: "❌ Offline", message: "Connection failed." });
+    }
+});
+
+// 2. Complete Refiner Route with Safety Unblockers
 app.post("/api/refine", async (req, res) => {
     try {
         const { text } = req.body;
@@ -9,7 +33,6 @@ app.post("/api/refine", async (req, res) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 contents: [{ parts: [{ text: "Rewrite this for a professional office: " + text }] }],
-                // FORCE THE AI TO BYPASS SAFETY BLOCKS
                 safetySettings: [
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -21,14 +44,18 @@ app.post("/api/refine", async (req, res) => {
 
         const data = await response.json();
         
-        // If it still fails, we want to see the EXACT reason from Google
         if (data.candidates && data.candidates[0].content) {
-            res.json({ refinedText: data.candidates[0].content.parts[0].text });
+            const refined = data.candidates[0].content.parts[0].text;
+            res.json({ refinedText: refined });
         } else {
             const reason = data.candidates?.[0]?.finishReason || "UNKNOWN";
-            res.json({ refinedText: `AI Blocked by Google. Reason: ${reason}. Try different words.` });
+            res.json({ refinedText: `AI could not generate a response. Reason: ${reason}` });
         }
     } catch (error) {
-        res.status(500).json({ error: "Server Error" });
+        console.error("Server Error:", error);
+        res.status(500).json({ error: "Internal Server Error" });
     }
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log("Server is running."));
