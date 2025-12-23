@@ -5,7 +5,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 1. Updated Status Check - Uses v1beta with the base model name
 app.get("/api/status", async (req, res) => {
     const key = process.env.GEMINI_API_KEY;
     if (!key) return res.json({ status: "❌ Error", message: "Key missing in Render settings." });
@@ -22,17 +21,15 @@ app.get("/api/status", async (req, res) => {
     }
 });
 
-// 2. Refiner Route - Fixed 404 by using the specific model ID
 app.post("/api/refine", async (req, res) => {
     try {
         const { text } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
-
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: "Rewrite this message to be professional for an office environment: " + text }] }],
+                contents: [{ parts: [{ text: "Rewrite this message to be professional for an office: " + text }] }],
                 safetySettings: [
                     { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                     { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -41,15 +38,11 @@ app.post("/api/refine", async (req, res) => {
                 ]
             })
         });
-
         const data = await response.json();
-        
-        if (data.candidates && data.candidates[0].content && data.candidates[0].content.parts) {
-            const refined = data.candidates[0].content.parts[0].text;
-            res.json({ refinedText: refined });
+        if (data.candidates && data.candidates[0].content) {
+            res.json({ refinedText: data.candidates[0].content.parts[0].text });
         } else {
-            const reason = data.candidates?.[0]?.finishReason || "UNKNOWN_ERROR";
-            res.json({ refinedText: `No text returned. Reason: ${reason}. Check prompt safety.` });
+            res.json({ refinedText: "AI could not generate a response. Try different words." });
         }
     } catch (error) {
         res.status(500).json({ error: "Server Internal Error" });
@@ -57,4 +50,4 @@ app.post("/api/refine", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("System Online"));v
+app.listen(PORT, () => console.log("System Online"));
