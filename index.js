@@ -10,11 +10,10 @@ app.post("/api/ai", async (req, res) => {
         const { prompt, type } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        // Custom system instructions based on the button clicked
         let systemInstruction = "";
-        if (type === 'email') systemInstruction = "You are a professional corporate assistant. Rewrite this into a polished, executive-level office email: ";
-        if (type === 'code') systemInstruction = "You are a senior software engineer. Provide clean, efficient code with brief comments for: ";
-        if (type === 'excel') systemInstruction = "You are an Excel expert. Provide only the formula and a 1-sentence explanation for: ";
+        if (type === 'email') systemInstruction = "You are BOSSai, a professional corporate assistant. Rewrite this into a polished, executive-level email: ";
+        if (type === 'code') systemInstruction = "You are BOSSai, a senior software engineer. Provide clean code for: ";
+        if (type === 'excel') systemInstruction = "You are BOSSai, an Excel expert. Provide the formula and brief explanation for: ";
 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
             method: "POST",
@@ -34,12 +33,12 @@ app.post("/api/ai", async (req, res) => {
         if (data.candidates && data.candidates[0].content) {
             res.json({ result: data.candidates[0].content.parts[0].text });
         } else {
-            res.json({ result: "AI error: " + (data.error?.message || "Safety Block") });
+            res.json({ result: "BOSSai error: " + (data.error?.message || "Safety Blocked") });
         }
     } catch (error) {
-        res.status(500).json({ result: "Server error occurred." });
+        res.status(500).json({ result: "BOSSai internal server error." });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("Canvas Backend Live"));
+app.listen(PORT, () => console.log("BOSSai Backend Live"));
