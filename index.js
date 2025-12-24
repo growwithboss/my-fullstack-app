@@ -10,15 +10,15 @@ app.post("/api/ai", async (req, res) => {
         const { prompt, type, model } = req.body;
         const API_KEY = process.env.GEMINI_API_KEY;
 
-        // Image requests don't need Gemini; they go to Pollinations
+        // Image generation handled separately via Pollinations (Free)
         if (type === 'image') return res.json({ result: prompt });
 
         let systemInstruction = "";
-        if (type === 'email') systemInstruction = "You are BOSSai. Professionalize this email: ";
-        if (type === 'code') systemInstruction = "You are BOSSai. Write clean code for: ";
-        if (type === 'excel') systemInstruction = "You are BOSSai. Give Excel formula for: ";
+        if (type === 'email') systemInstruction = "You are BOSSai. Professionalize this for an office: ";
+        if (type === 'code') systemInstruction = "You are BOSSai. Write efficient code for: ";
+        if (type === 'excel') systemInstruction = "You are BOSSai. Provide the Excel formula for: ";
 
-        // Dynamic model selection
+        // Uses the dynamic model ID passed from the frontend
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -31,7 +31,7 @@ app.post("/api/ai", async (req, res) => {
         if (data.candidates && data.candidates[0].content) {
             res.json({ result: data.candidates[0].content.parts[0].text });
         } else {
-            res.json({ result: "BOSSai error: " + (data.error?.message || "Model Unavailable") });
+            res.json({ result: `BOSSai error: ${data.error?.message || "Model not responding"}` });
         }
     } catch (error) {
         res.status(500).json({ result: "BOSSai Server Error." });
