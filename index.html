@@ -1,47 +1,129 @@
-async function askBOSS() {
-    const input = document.getElementById('userInput').value;
-    const textOutput = document.getElementById('textOutput');
-    const imgOutput = document.getElementById('imageOutput');
-    const btn = document.getElementById('runBtn');
-    
-    if(!input) return;
-    
-    // 1. Reset the UI for a new request
-    btn.disabled = true;
-    textOutput.style.display = 'block';
-    textOutput.innerText = "BOSSai is designing your image...";
-    imgOutput.style.display = 'none';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOSSai | Intelligence Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #007aff; --bg: #f5f5f7; --sidebar: #1d1d1f; }
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { margin: 0; display: flex; height: 100vh; background: var(--bg); flex-direction: row; }
 
-    if (mode === 'image') {
-        try {
-            // 2. Clean the input and add a random seed to prevent caching
-            const cleanPrompt = encodeURIComponent(input.trim());
-            const randomSeed = Math.floor(Math.random() * 1000000);
-            
-            // 3. Construct the verified Pollinations URL
-            const imageUrl = `https://image.pollinations.ai/prompt/${cleanPrompt}?width=1024&height=1024&seed=${randomSeed}&nologo=true`;
+        /* Sidebar & Navigation */
+        .sidebar { width: 260px; background: var(--sidebar); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .logo { font-size: 24px; font-weight: 600; margin-bottom: 30px; color: var(--primary); }
+        .nav-item { padding: 14px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; color: #a1a1a6; transition: 0.2s; }
+        .nav-item.active { background: var(--primary); color: white; }
 
-            // 4. Pre-load the image in the background before showing it
-            const tempImage = new Image();
-            tempImage.onload = function() {
-                imgOutput.src = imageUrl;
-                imgOutput.style.display = 'block';
-                textOutput.style.display = 'none';
-                btn.disabled = false;
-            };
-            
-            tempImage.onerror = function() {
-                textOutput.innerText = "BOSSai encountered a generation error. Please try a simpler prompt.";
-                btn.disabled = false;
-            };
+        /* Main Canvas & Responsive Layout */
+        .canvas { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; align-items: center; }
+        .content-wrap { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 20px; }
+        
+        .input-box { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        textarea { width: 100%; border: none; font-size: 16px; outline: none; resize: none; min-height: 80px; }
+        .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; }
 
-            tempImage.src = imageUrl;
+        /* Output & Spinner */
+        .output-card { background: white; border-radius: 18px; padding: 24px; min-height: 300px; border: 1px solid #e5e5e5; position: relative; display: flex; justify-content: center; align-items: center; }
+        
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        } catch (err) {
-            textOutput.innerText = "Critical error in Image Studio.";
-            btn.disabled = false;
+        #imageOutput { max-width: 100%; border-radius: 12px; display: none; }
+        #textOutput { width: 100%; white-space: pre-wrap; line-height: 1.6; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 10px; }
+            .logo { display: none; }
+            .nav-item { margin-bottom: 0; margin-right: 8px; white-space: nowrap; }
         }
-    } else {
-        // ... (Keep your existing Email/Code/Excel logic here)
-    }
-}
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">BOSSai</div>
+        <div class="nav-item active" onclick="setMode('email', this)">Email</div>
+        <div class="nav-item" onclick="setMode('code', this)">Code</div>
+        <div class="nav-item" onclick="setMode('excel', this)">Excel</div>
+        <div class="nav-item" onclick="setMode('image', this)">🎨 Image Studio</div>
+    </div>
+
+    <div class="canvas">
+        <div class="content-wrap">
+            <h2 id="modeTitle">BOSSai Email Assistant</h2>
+            <div class="input-box">
+                <textarea id="userInput" placeholder="Type here..."></textarea>
+                <button class="btn" id="runBtn" onclick="askBOSS()">Generate with BOSSai</button>
+            </div>
+            <div class="output-card">
+                <div class="loader" id="loader"></div>
+                <img id="imageOutput" src="">
+                <div id="textOutput">Ready for your request...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mode = 'email';
+
+        function setMode(m, el) {
+            mode = m;
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+            document.getElementById('modeTitle').innerText = `BOSSai ${el.innerText}`;
+            document.getElementById('imageOutput').style.display = 'none';
+            document.getElementById('textOutput').style.display = 'block';
+        }
+
+        async function askBOSS() {
+            const input = document.getElementById('userInput').value;
+            const textOut = document.getElementById('textOutput');
+            const imgOut = document.getElementById('imageOutput');
+            const loader = document.getElementById('loader');
+            const btn = document.getElementById('runBtn');
+
+            if(!input) return;
+            
+            // Show Loader
+            btn.disabled = true;
+            loader.style.display = 'block';
+            textOut.style.display = 'none';
+            imgOut.style.display = 'none';
+
+            if (mode === 'image') {
+                const encoded = encodeURIComponent(input);
+                const url = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&nologo=true&seed=${Math.random()}`;
+                
+                // Pre-load logic
+                const temp = new Image();
+                temp.onload = () => {
+                    imgOut.src = url;
+                    imgOut.style.display = 'block';
+                    loader.style.display = 'none';
+                    btn.disabled = false;
+                };
+                temp.src = url;
+            } else {
+                try {
+                    const response = await fetch('https://my-fullstack-app-gvce.onrender.com/api/ai', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ prompt: input, type: mode })
+                    });
+                    const data = await response.json();
+                    textOut.innerText = data.result;
+                    textOut.style.display = 'block';
+                } catch (e) {
+                    textOut.innerText = "Error contacting BOSSai.";
+                    textOut.style.display = 'block';
+                } finally {
+                    loader.style.display = 'none';
+                    btn.disabled = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
