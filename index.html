@@ -82,8 +82,8 @@
 
             if (mode === 'image') {
                 // Pollinations.ai implementation
-                const encodedPrompt = encodeURIComponent(input);
-                const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1024&height=1024&seed=${Math.floor(Math.random() * 1000)}`;
+                const encodedPrompt = encodeURIComponent(userInput);
+const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
                 
                 textOutput.style.display = 'none';
                 imgOutput.src = imageUrl;
