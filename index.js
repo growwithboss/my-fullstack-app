@@ -1,50 +1,49 @@
 const express = require("express");
 const cors = require("cors");
+const Bytez = require("bytez.js"); // Make sure to use require for Node.js
 const app = express();
 
-// 1. CORS: Ensure your GitHub Pages domain is allowed
 app.use(cors({
     origin: "https://growwithboss.github.io",
     methods: ["GET", "POST"]
 }));
 app.use(express.json());
 
-// 2. STATUS ROUTE: Fixed to work with /api/status
+// 1. Initialize the Bytez SDK with your variable
+const sdk = new Bytez(process.env.BYTEZ_API_KEY);
+
+// 2. Status Route
 app.get("/api/status", (req, res) => {
-    res.json({ status: "✅ Connected", message: "BOSSai (Bytez) is active!" });
+    res.json({ status: "✅ Connected", message: "BOSSai (SDK) is active!" });
 });
 
-// 3. MAIN AI ROUTE: Handles Bytez requests
+// 3. Main AI Route using SDK
 app.post("/api/ai", async (req, res) => {
     try {
-        const { prompt, type, model } = req.body;
-        const BYTEZ_KEY = process.env.BYTEZ_API_KEY;
+        const { prompt, type, model: modelId } = req.body;
 
-        const response = await fetch(`https://api.bytez.com/models/v2/${model}`, {
-            method: "POST",
-            headers: {
-                "Authorization": BYTEZ_KEY,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                messages: [{ role: "user", content: prompt }]
-            })
-        });
+        // Initialize the specific model
+        const model = sdk.model(modelId);
 
-        const data = await response.json();
-        
-        // Bytez returns the output in the 'output' field
-        if (data && data.output) {
-            res.json({ result: data.output });
+        let systemMsg = "";
+        if (type === 'email') systemMsg = "Refine this for office: ";
+        if (type === 'code') systemMsg = "Write clean code for: ";
+        if (type === 'excel') systemMsg = "Provide Excel formula for: ";
+
+        // Send input to model using model.run()
+        const { error, output } = await model.run(systemMsg + prompt);
+
+        if (error) {
+            res.json({ result: `BOSSai error: ${error}` });
         } else {
-            res.json({ result: `BOSSai error: ${data.error || "Model returned no output."}` });
+            res.json({ result: output });
         }
-    } catch (error) {
-        res.status(500).json({ result: "BOSSai Backend Connection Failed." });
+    } catch (err) {
+        res.status(500).json({ result: "BOSSai Backend SDK Error." });
     }
 });
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
-    console.log(`BOSSai Live on port ${PORT}`);
+    console.log(`BOSSai SDK Mode active on port ${PORT}`);
 });
