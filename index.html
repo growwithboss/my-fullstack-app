@@ -52,10 +52,11 @@
             <div class="input-box">
                 <textarea id="userInput" placeholder="Ask BOSSai..."></textarea>
                 <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                    <select id="modelSelect" style="padding:8px; border-radius:8px;">
-                        <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                    </select>
+                    <select id="modelSelect">
+    <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 Mini (Free & Fast)</option>
+    <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B (Better Reasoning)</option>
+    <option value="Qwen/Qwen2-7B-Instruct">Qwen 2 (Great for Excel/Code)</option>
+</select>
                     <button class="btn" onclick="askBOSS()" id="runBtn" style="background:var(--primary); color:white; border:none; padding:10px 25px; border-radius:10px; cursor:pointer;">Generate</button>
                 </div>
             </div>
