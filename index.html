@@ -41,10 +41,21 @@
             <div class="input-box">
                 <textarea id="userInput" placeholder="Ask anything..."></textarea>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
-                    <select id="modelSelect" style="padding:8px; border-radius:8px;">
-                        <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 (Fast Free)</option>
-                        <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B (Smart)</option>
-                    </select>
+                    <select id="modelSelect" style="padding:10px; border-radius:8px; width: 100%; margin-bottom: 10px;">
+    <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 Mini (Fastest)</option>
+    <option value="google/gemma-3-4b-it">Gemma 3 4B (Smart & Efficient)</option>
+    
+    <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B (Very Reliable)</option>
+    <option value="meta-llama/Llama-3.3-70B-Instruct">Llama 3.3 70B (High Intelligence)</option>
+    <option value="Qwen/Qwen2.5-72B-Instruct">Qwen 2.5 72B (Great for Logic)</option>
+    
+    <option value="deepseek-ai/deepseek-coder-33b-instruct">DeepSeek Coder (Top Coding)</option>
+    <option value="google/codegemma-7b-it">CodeGemma (Google Code Model)</option>
+    
+    <option value="deepseek-ai/DeepSeek-V3">DeepSeek V3 (State of the Art)</option>
+    <option value="meta-llama/Llama-4-Scout">Llama 4 Scout (Next Gen)</option>
+    <option value="mistralai/Mixtral-8x22B-Instruct-v0.1">Mixtral 8x22B (Expert MoE)</option>
+</select>
                     <button onclick="askBOSS()" id="runBtn" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Generate</button>
                 </div>
             </div>
