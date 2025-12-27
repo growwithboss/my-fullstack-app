@@ -66,3 +66,15 @@ app.post("/api/ai", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("BOSSai Powered by Bytez"));
+
+
+// SELF-PING TO PREVENT RENDER SLEEP
+const URL = `https://my-fullstack-app-gvce.onrender.com/api/status`; 
+setInterval(async () => {
+    try {
+        const response = await fetch(URL);
+        console.log(`BOSSai Heartbeat: ${response.status} at ${new Date().toLocaleTimeString()}`);
+    } catch (e) {
+        console.error("Heartbeat failed:", e.message);
+    }
+}, 840000); // Pings every 14 minutes (14 * 60 * 1000)
