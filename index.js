@@ -2,41 +2,28 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 
-app.use(cors());
+// 1. Security & CORS: Update the origin to your exact GitHub Pages URL
+app.use(cors({
+    origin: "https://growwithboss.github.io", 
+    methods: ["GET", "POST"]
+}));
 app.use(express.json());
 
-// 1. Bytez Status Check
-app.get("/api/status", async (req, res) => {
-    const key = process.env.BYTEZ_API_KEY; // Change your Render variable name to this
-    if (!key) return res.json({ status: "❌ Error", message: "Bytez Key missing in Render." });
-    
-    try {
-        const response = await fetch("https://api.bytez.com/models/v2/list", {
-            headers: { "Authorization": key }
-        });
-        if (response.ok) {
-            res.json({ status: "✅ Connected", message: "BOSSai (Bytez) is ready!" });
-        } else {
-            res.json({ status: "⚠️ Issue", message: "Invalid Bytez Key." });
-        }
-    } catch (err) {
-        res.json({ status: "❌ Offline", message: "Cannot reach Bytez servers." });
-    }
-});
-
-// 2. The Main AI Route (Modified for Bytez)
+// 2. Main BOSSai Logic
 app.post("/api/ai", async (req, res) => {
     try {
         const { prompt, type, model } = req.body;
         const BYTEZ_KEY = process.env.BYTEZ_API_KEY;
 
-        // Bytez Chat API Structure
-        let systemMsg = "You are BOSSai assistant. ";
-        if (type === 'email') systemMsg += "Refine this for office: ";
-        if (type === 'code') systemMsg += "Provide clean code for: ";
-        if (type === 'excel') systemMsg += "Provide Excel formula for: ";
+        if (type === 'image') return res.json({ result: prompt });
 
-        // Bytez uses a specific URL format: api.bytez.com/models/v2/{model_id}
+        let systemMsg = "Reply in high-quality Markdown. ";
+        if (type === 'email') systemMsg += "Professionalize this for an office environment: ";
+        if (type === 'code') systemMsg += "Write clean, syntax-highlighted code for: ";
+        if (type === 'excel') systemMsg += "Provide the Excel formula and a formatted table for: ";
+        if (type === 'chat') systemMsg += "You are BOSSai, a helpful AI. Converse naturally: ";
+
+        // Bytez V2 API Call
         const response = await fetch(`https://api.bytez.com/models/v2/${model}`, {
             method: "POST",
             headers: {
@@ -52,29 +39,19 @@ app.post("/api/ai", async (req, res) => {
         });
 
         const data = await response.json();
-        
-        // Handle Bytez output format
-        if (data.output) {
-            res.json({ result: data.output });
-        } else {
-            res.json({ result: "BOSSai error: " + (data.error || "Model timed out.") });
-        }
+        res.json({ result: data.output || "BOSSai error: Model did not return text." });
     } catch (error) {
-        res.status(500).json({ result: "BOSSai Backend Error." });
+        res.status(500).json({ result: "BOSSai Backend Connection Failed." });
     }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("BOSSai Powered by Bytez"));
+// 3. Heartbeat & Port Binding
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`BOSSai Online on port ${PORT}`);
+});
 
-
-// SELF-PING TO PREVENT RENDER SLEEP
-const URL = `https://my-fullstack-app-gvce.onrender.com/api/status`; 
-setInterval(async () => {
-    try {
-        const response = await fetch(URL);
-        console.log(`BOSSai Heartbeat: ${response.status} at ${new Date().toLocaleTimeString()}`);
-    } catch (e) {
-        console.error("Heartbeat failed:", e.message);
-    }
-}, 840000); // Pings every 14 minutes (14 * 60 * 1000)
+// 4. STAY AWAKE: Self-ping every 14 minutes
+setInterval(() => {
+    fetch(`https://my-fullstack-app-gvce.onrender.com/api/status`).catch(() => {});
+}, 840000);
