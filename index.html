@@ -3,91 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOSSai Pro Hub</title>
+    <title>BOSSai Hub</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <style>
         :root { --primary: #007aff; --bg: #f5f5f7; --sidebar: #1d1d1f; }
-        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { margin: 0; display: flex; height: 100vh; background: var(--bg); }
-
         .sidebar { width: 260px; background: var(--sidebar); color: white; padding: 20px; display: flex; flex-direction: column; }
-        .logo { font-size: 24px; font-weight: 600; margin-bottom: 30px; color: var(--primary); }
-        .nav-item { padding: 14px; border-radius: 10px; cursor: pointer; margin-bottom: 8px; color: #a1a1a6; transition: 0.2s; }
+        .logo { font-size: 24px; font-weight: bold; color: var(--primary); margin-bottom: 30px; }
+        .nav-item { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 5px; color: #a1a1a6; transition: 0.3s; }
         .nav-item.active { background: var(--primary); color: white; }
-
-        .canvas { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow-y: auto; }
-        .content-wrap { width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-        
-        .input-box { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        .canvas { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; align-items: center; }
+        .content-wrap { width: 100%; max-width: 850px; display: flex; flex-direction: column; gap: 20px; }
+        .input-box { background: white; border-radius: 18px; padding: 20px; border: 1px solid #ddd; }
         textarea { width: 100%; border: none; font-size: 16px; outline: none; resize: none; min-height: 80px; }
-        
-        .output-card { background: white; border-radius: 18px; padding: 24px; min-height: 400px; border: 1px solid #e5e5e5; overflow-x: auto; }
-        
-        /* Pro Formatting Styles */
-        #textOutput h1, #textOutput h2 { color: var(--primary); }
-        #textOutput table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        #textOutput th, #textOutput td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-        #textOutput th { background: #f8f9fa; }
-        #textOutput blockquote { border-left: 4px solid var(--primary); padding-left: 15px; color: #666; font-style: italic; }
-
-        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; flex-direction: row; height: auto; overflow-x: auto; } }
+        .output-card { background: white; border-radius: 18px; padding: 25px; min-height: 350px; border: 1px solid #ddd; }
+        /* Table & Code Formatting */
+        #textOutput table { border-collapse: collapse; width: 100%; margin: 15px 0; }
+        #textOutput th, #textOutput td { border: 1px solid #eee; padding: 10px; }
+        @media (max-width: 768px) { body { flex-direction: column; } .sidebar { width: 100%; flex-direction: row; height: auto; } }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <div class="logo">BOSSai</div>
-        <div class="nav-item active" onclick="setMode('chat', this)">💬 Normal Chat</div>
-        <div class="nav-item" onclick="setMode('email', this)">📝 Email</div>
-        <div class="nav-item" onclick="setMode('code', this)">💻 Code</div>
-        <div class="nav-item" onclick="setMode('excel', this)">📊 Excel</div>
-        <div class="nav-item" onclick="setMode('image', this)">🎨 Image</div>
+        <div class="nav-item active" onclick="setMode('chat', this)">Chat</div>
+        <div class="nav-item" onclick="setMode('email', this)">Email</div>
+        <div class="nav-item" onclick="setMode('code', this)">Code</div>
+        <div class="nav-item" onclick="setMode('excel', this)">Excel</div>
+        <div class="nav-item" onclick="setMode('image', this)">Image</div>
     </div>
-
     <div class="canvas">
         <div class="content-wrap">
-            <h2 id="modeTitle">BOSSai Conversation</h2>
+            <h2 id="modeTitle">BOSSai Assistant</h2>
             <div class="input-box">
-                <textarea id="userInput" placeholder="Ask BOSSai..."></textarea>
-                <div style="display:flex; justify-content:space-between; margin-top:10px;">
-                    <select id="modelSelect">
-    <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 Mini (Free & Fast)</option>
-    <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B (Better Reasoning)</option>
-    <option value="Qwen/Qwen2-7B-Instruct">Qwen 2 (Great for Excel/Code)</option>
-</select>
-                    <button class="btn" onclick="askBOSS()" id="runBtn" style="background:var(--primary); color:white; border:none; padding:10px 25px; border-radius:10px; cursor:pointer;">Generate</button>
+                <textarea id="userInput" placeholder="Ask anything..."></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <select id="modelSelect" style="padding:8px; border-radius:8px;">
+                        <option value="microsoft/Phi-3-mini-4k-instruct">Phi-3 (Fast Free)</option>
+                        <option value="mistralai/Mistral-7B-Instruct-v0.3">Mistral 7B (Smart)</option>
+                    </select>
+                    <button onclick="askBOSS()" id="runBtn" style="background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">Generate</button>
                 </div>
             </div>
-            <div class="output-card" id="output">
-                <img id="imageOutput" style="display:none; max-width:100%;">
-                <div id="textOutput">Ready for your request...</div>
+            <div class="output-card">
+                <img id="imageOutput" style="display:none; max-width:100%; border-radius:10px;">
+                <div id="textOutput">Enter your prompt...</div>
             </div>
         </div>
     </div>
-
     <script>
         let mode = 'chat';
-
         function setMode(m, el) {
             mode = m;
             document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
             el.classList.add('active');
             document.getElementById('modeTitle').innerText = `BOSSai ${el.innerText}`;
         }
-
         async function askBOSS() {
             const input = document.getElementById('userInput').value;
             const model = document.getElementById('modelSelect').value;
             const textOut = document.getElementById('textOutput');
             const imgOut = document.getElementById('imageOutput');
             const btn = document.getElementById('runBtn');
-
             if(!input) return;
             btn.disabled = true;
-            textOut.innerHTML = "<i>BOSSai is thinking...</i>";
-
+            textOut.innerHTML = "<i>Thinking...</i>";
             if (mode === 'image') {
                 const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(input)}?width=1024&height=1024&seed=${Math.random()}`;
                 imgOut.src = url;
@@ -102,18 +85,12 @@
                         body: JSON.stringify({ prompt: input, type: mode, model: model })
                     });
                     const data = await response.json();
-                    
-                    // Render Markdown and Highlight Code
                     textOut.innerHTML = marked.parse(data.result);
                     Prism.highlightAllUnder(textOut);
-                    
                     textOut.style.display = 'block';
                     imgOut.style.display = 'none';
-                } catch (e) {
-                    textOut.innerText = "Connection error.";
-                } finally {
-                    btn.disabled = false;
-                }
+                } catch (e) { textOut.innerText = "Error: Wake up server manually."; }
+                finally { btn.disabled = false; }
             }
         }
     </script>
